@@ -604,7 +604,9 @@ class EYSS_Admin_Settings
         <div id="eyss-import-container">
             <p>
                 <strong><?php _e('Current Status:', 'embed-youtube-shorts'); ?></strong>
-                <?php printf(__('%d videos imported', 'embed-youtube-shorts'), $published_count); ?>
+                <?php 
+                // translators: %d is the number of imported videos
+                printf(__('%d videos imported', 'embed-youtube-shorts'), $published_count); ?>
             </p>
 
             <div class="eyss-import-controls">
@@ -629,7 +631,9 @@ class EYSS_Admin_Settings
                 </p>
             <?php else: ?>
                 <p class="description">
-                    <?php printf(__('This will import all YouTube Shorts from channel: %s', 'embed-youtube-shorts'), '<code>' . esc_html($channel_id) . '</code>'); ?>
+                    <?php 
+                    // translators: %s is the YouTube channel ID
+                    printf(__('This will import all YouTube Shorts from channel: %s', 'embed-youtube-shorts'), '<code>' . esc_html($channel_id) . '</code>'); ?>
                 </p>
             <?php endif; ?>
 
@@ -697,7 +701,9 @@ class EYSS_Admin_Settings
         <p class="description">
             <?php _e('When enabled, the plugin will automatically check for new videos daily and import them.', 'embed-youtube-shorts'); ?>
             <?php if ($next_scheduled): ?>
-                <br><strong><?php printf(__('Next scheduled import: %s', 'embed-youtube-shorts'), date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $next_scheduled)); ?></strong>
+                <br><strong><?php 
+                // translators: %s is the formatted date and time of the next scheduled import
+                printf(__('Next scheduled import: %s', 'embed-youtube-shorts'), date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $next_scheduled)); ?></strong>
             <?php elseif ($enabled): ?>
                 <br><em><?php _e('Auto-import will be scheduled after saving settings.', 'embed-youtube-shorts'); ?></em>
             <?php endif; ?>
@@ -716,7 +722,9 @@ class EYSS_Admin_Settings
         <input type="time" name="eyss_settings[auto_import_time]" value="<?php echo esc_attr($time); ?>" />
         <p class="description">
             <?php _e('Set the time when automatic imports should run daily (server time).', 'embed-youtube-shorts'); ?>
-            <br><em><?php printf(__('Current server time: %s', 'embed-youtube-shorts'), date_i18n(get_option('time_format'))); ?></em>
+            <br><em><?php 
+            // translators: %s is the current server time in the site's time format
+            printf(__('Current server time: %s', 'embed-youtube-shorts'), date_i18n(get_option('time_format'))); ?></em>
         </p>
 <?php
     }
