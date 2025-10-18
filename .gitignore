@@ -1,0 +1,58 @@
+# WordPress Core Files
+wp-config.php
+wp-config-local.php
+wp-content/uploads/
+wp-content/cache/
+wp-content/upgrade/
+
+# Plugin Specific
+*.log
+*.tmp
+*.bak
+*.swp
+*~
+
+# Development Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE Files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Node modules (if any)
+node_modules/
+npm-debug.log*
+
+# PHP Storm
+.phpstorm.meta.php
+
+# Composer
+vendor/
+composer.lock
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Test files (already removed but for future)
+*test*.html
+*test*.php
+*debug*.html
+*debug*.php
+
+# Update system files (should be on server only)
+update-check.json
+update-info.json
+
+# Backup files
+*.backup
+*.old

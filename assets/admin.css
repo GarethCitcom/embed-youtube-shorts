@@ -1,0 +1,387 @@
+/* Embed YouTube Shorts - Admin Styles */
+
+/* Settings page layout */
+#eyss-settings-container {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+#eyss-settings-form {
+    flex: 2;
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+}
+
+#eyss-settings-sidebar {
+    flex: 1;
+}
+
+/* Sidebar boxes */
+.eyss-sidebar-box {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.eyss-sidebar-box h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #23282d;
+    font-size: 16px;
+}
+
+.eyss-sidebar-box h4 {
+    margin-top: 15px;
+    margin-bottom: 10px;
+    color: #555;
+    font-size: 14px;
+}
+
+.eyss-sidebar-box code {
+    background: #f1f1f1;
+    padding: 3px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    color: #d63384;
+    font-family: Monaco, Consolas, 'Andale Mono', 'DejaVu Sans Mono', monospace;
+}
+
+.eyss-sidebar-box ul,
+.eyss-sidebar-box ol {
+    margin-left: 20px;
+    color: #555;
+}
+
+.eyss-sidebar-box li {
+    margin-bottom: 5px;
+}
+
+/* API test result styles */
+#eyss-api-test-result {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 4px;
+    font-weight: 500;
+    display: none;
+}
+
+#eyss-api-test-result.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+#eyss-api-test-result.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Debug result styles */
+#eyss-debug-result {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 4px;
+    font-weight: 500;
+    display: none;
+}
+
+#eyss-debug-result.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+#eyss-debug-result.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+#eyss-debug-result.loading {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+#eyss-api-test-result.loading {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+/* Test API button */
+#eyss-test-api {
+    margin-left: 10px;
+    position: relative;
+}
+
+#eyss-test-api:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+#eyss-test-api.loading::after {
+    content: '';
+    width: 14px;
+    height: 14px;
+    border: 2px solid #555;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: eyss-admin-spin 1s linear infinite;
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+@keyframes eyss-admin-spin {
+    0% { transform: translateY(-50%) rotate(0deg); }
+    100% { transform: translateY(-50%) rotate(360deg); }
+}
+
+/* Form field improvements */
+.form-table th {
+    width: 200px;
+    padding-left: 0;
+}
+
+.form-table td {
+    padding-left: 0;
+}
+
+.form-table input[type="text"],
+.form-table input[type="password"],
+.form-table input[type="number"],
+.form-table select {
+    width: 100%;
+    max-width: 400px;
+}
+
+.form-table .description {
+    margin-top: 5px;
+    color: #666;
+    font-style: italic;
+}
+
+.form-table .description a {
+    color: #0073aa;
+    text-decoration: none;
+}
+
+.form-table .description a:hover {
+    text-decoration: underline;
+}
+
+/* Settings sections */
+.eyss-settings-section {
+    margin-bottom: 30px;
+}
+
+.eyss-settings-section h2 {
+    border-bottom: 1px solid #ccd0d4;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* Help text */
+.eyss-help-text {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 15px 0;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.eyss-help-text h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+/* Status indicators */
+.eyss-status {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.eyss-status.connected {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.eyss-status.disconnected {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.eyss-status.testing {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    #eyss-settings-container {
+        flex-direction: column;
+    }
+
+    #eyss-settings-form,
+    #eyss-settings-sidebar {
+        flex: none;
+        width: 100%;
+    }
+}
+
+@media (max-width: 782px) {
+    .form-table th,
+    .form-table td {
+        display: block;
+        width: 100%;
+        padding: 10px 0;
+    }
+
+    .form-table th {
+        border-bottom: none;
+        padding-bottom: 5px;
+    }
+
+    .form-table input[type="text"],
+    .form-table input[type="password"],
+    .form-table input[type="number"],
+    .form-table select {
+        width: 100%;
+        max-width: none;
+    }
+
+    #eyss-test-api {
+        margin-left: 0;
+        margin-top: 10px;
+        display: block;
+        width: 100%;
+    }
+}
+
+/* WordPress admin notices adjustment */
+.notice {
+    margin: 20px 0 20px 0;
+}
+
+/* Custom checkbox styling */
+.eyss-checkbox-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.eyss-checkbox-field input[type="checkbox"] {
+    margin: 0;
+}
+
+.eyss-checkbox-field label {
+    margin: 0;
+    font-weight: normal;
+}
+
+/* Field groups */
+.eyss-field-group {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 20px;
+    margin: 15px 0;
+}
+
+.eyss-field-group h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+/* Loading states */
+.eyss-loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.eyss-loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #0073aa;
+    border-radius: 50%;
+    animation: eyss-admin-spin 1s linear infinite;
+}
+
+/* Button improvements */
+.button.eyss-button-primary {
+    background: #0073aa;
+    border-color: #0073aa;
+    color: #fff;
+}
+
+.button.eyss-button-primary:hover {
+    background: #005a87;
+    border-color: #005a87;
+}
+
+.button.eyss-button-secondary {
+    background: #f7f7f7;
+    border-color: #cccccc;
+    color: #555;
+}
+
+.button.eyss-button-secondary:hover {
+    background: #f1f1f1;
+    border-color: #999;
+}
+
+/* Success messages */
+.eyss-success-message {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    border-radius: 4px;
+    padding: 12px;
+    margin: 15px 0;
+}
+
+/* Warning messages */
+.eyss-warning-message {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+    border-radius: 4px;
+    padding: 12px;
+    margin: 15px 0;
+}
+
+/* Info messages */
+.eyss-info-message {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+    border-radius: 4px;
+    padding: 12px;
+    margin: 15px 0;
+}
