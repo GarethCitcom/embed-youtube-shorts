@@ -487,12 +487,13 @@
             $importBtn.prop('disabled', true).text('Importing...');
             $forceBtn.prop('disabled', true);
 
-            // Show progress container
+            // Show progress container and reset progress bar
             $progress.show();
             $('#eyss-progress-status').text('Starting import process...');
             $('#eyss-progress-details').text('This may take a few minutes...');
+            $('#eyss-progress-bar').css('width', '0%');
 
-            // Start simple import
+            // Start background import
             $.ajax({
                 url: eyss_admin.ajax_url,
                 type: 'POST',
@@ -501,52 +502,26 @@
                     nonce: EYSSAdmin.getNonce(),
                     force_refresh: forceRefresh
                 },
-                timeout: 300000, // 5 minutes timeout
+                timeout: 30000, // 30 seconds for starting the process
                 success: function(response) {
-                    if (response.success) {
-                        const result = response.data;
-
-                        $('#eyss-progress-status').text('Import completed successfully!');
-                        $('#eyss-progress-bar').css('width', '100%');
-                        $('#eyss-progress-details').text(result.message || 'Import finished');
-
-                        // Show results
-                        const $results = $('#eyss-progress-results');
-                        const $stats = $('#eyss-import-stats');
-
-                        $stats.empty();
-                        $stats.append(`<li>Videos processed: ${result.processed || 0}</li>`);
-                        $stats.append(`<li>New shorts imported: ${result.imported || 0}</li>`);
-                        if (result.updated > 0) {
-                            $stats.append(`<li>Videos updated: ${result.updated}</li>`);
-                        }
-                        if (result.skipped > 0) {
-                            $stats.append(`<li>Videos skipped: ${result.skipped}</li>`);
-                        }
-
-                        $results.show();
-
-                        EYSSAdmin.showNotification('Video import completed successfully!', 'success');
-
-                        // Reload page after delay
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 3000);
+                    if (response.success && response.data.progress_key) {
+                        // Import started successfully, begin polling for progress
+                        $('#eyss-progress-status').text('Import started successfully. Monitoring progress...');
+                        EYSSAdmin.pollImportProgress(response.data.progress_key);
                     } else {
-                        $('#eyss-progress-status').text('Import failed');
-                        EYSSAdmin.showNotification('Import failed: ' + (response.data || 'Unknown error'), 'error');
+                        $('#eyss-progress-status').text('Import failed to start');
+                        EYSSAdmin.showNotification('Import failed to start: ' + (response.data || 'Unknown error'), 'error');
+                        EYSSAdmin.resetImportUI();
                     }
                 },
                 error: function(xhr, status, error) {
-                    let errorMsg = 'Import request failed';
+                    let errorMsg = 'Failed to start import';
                     if (status === 'timeout') {
-                        errorMsg = 'Import timed out - your videos may still be importing in the background';
+                        errorMsg = 'Request timed out while starting import';
                     }
 
-                    $('#eyss-progress-status').text('Import failed');
+                    $('#eyss-progress-status').text('Import failed to start');
                     EYSSAdmin.showNotification(errorMsg, 'error');
-                },
-                complete: function() {
                     EYSSAdmin.resetImportUI();
                 }
             });
@@ -670,12 +645,27 @@
          * Poll import progress
          */
         pollImportProgress: function(progressKey) {
+            let pollCount = 0;
+            const maxPolls = 150; // 5 minutes at 2-second intervals
+
             const pollInterval = setInterval(function() {
+                pollCount++;
+
+                // Stop polling after maximum attempts
+                if (pollCount > maxPolls) {
+                    clearInterval(pollInterval);
+                    $('#eyss-progress-status').text('Import monitoring timed out');
+                    EYSSAdmin.showNotification('Import monitoring timed out. The import may still be running in the background.', 'warning');
+                    EYSSAdmin.resetImportUI();
+                    return;
+                }
+
                 $.ajax({
                     url: eyss_admin.ajax_url,
-                    type: 'GET',
+                    type: 'POST',
                     data: {
                         action: 'eyss_get_import_progress',
+                        nonce: EYSSAdmin.getNonce(),
                         progress_key: progressKey
                     },
                     success: function(response) {
@@ -683,19 +673,30 @@
                             const progress = response.data;
                             EYSSAdmin.updateImportProgress(progress);
 
-                            if (progress.status === 'completed' || progress.status === 'failed') {
+                            if (progress.status === 'completed' || progress.status === 'failed' || progress.status === 'error') {
                                 clearInterval(pollInterval);
                                 EYSSAdmin.completeImport(progress);
                             }
                         } else {
+                            // If no progress found, maybe import hasn't started yet or finished
+                            if (pollCount < 10) {
+                                // Keep trying for first 20 seconds
+                                return;
+                            }
+
                             clearInterval(pollInterval);
-                            EYSSAdmin.showNotification('Failed to get import progress', 'error');
+                            EYSSAdmin.showNotification('Failed to get import progress: ' + (response.data || 'Unknown error'), 'error');
                             EYSSAdmin.resetImportUI();
                         }
                     },
-                    error: function() {
+                    error: function(xhr, status, error) {
+                        if (pollCount < 5) {
+                            // Retry first few times in case of temporary network issues
+                            return;
+                        }
+
                         clearInterval(pollInterval);
-                        EYSSAdmin.showNotification('Progress polling failed', 'error');
+                        EYSSAdmin.showNotification('Progress polling failed: ' + error, 'error');
                         EYSSAdmin.resetImportUI();
                     }
                 });
@@ -859,6 +860,24 @@
                 .eyss-copy-shortcode.copied {
                     background: #00a32a !important;
                     color: white !important;
+                }
+
+                #eyss-progress-bar {
+                    transition: width 0.3s ease-in-out;
+                    background: linear-gradient(to right, #00a32a, #108a00);
+                    height: 20px;
+                    border-radius: 10px;
+                }
+
+                .eyss-import-progress {
+                    margin-top: 20px;
+                }
+
+                .eyss-import-progress .progress-container {
+                    background: #f0f0f0;
+                    border-radius: 10px;
+                    overflow: hidden;
+                    margin: 10px 0;
                 }
             `)
             .appendTo('head');

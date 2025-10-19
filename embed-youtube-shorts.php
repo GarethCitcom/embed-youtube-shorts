@@ -4,7 +4,7 @@
  * Plugin Name: Embed YouTube Shorts
  * Plugin URI: https://plugins.citcom.support/eyss
  * Description: Display YouTube Shorts from a channel playlist in various layouts using the YouTube API.
- * Version: 2.3.0
+ * Version: 2.3.1
  * Author: Gareth Hale, CitCom.
  * Author URI: https://citcom.co.uk
  * License: GPL v2 or later
@@ -38,7 +38,7 @@ if (version_compare(get_bloginfo('version'), '6.2', '<')) {
 // Define plugin constants
 define('EYSS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('EYSS_PLUGIN_PATH', plugin_dir_path(__FILE__));
-define('EYSS_PLUGIN_VERSION', '2.3.0');
+define('EYSS_PLUGIN_VERSION', '2.3.1');
 
 /**
  * Main plugin class

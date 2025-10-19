@@ -24,8 +24,9 @@ class EYSS_Video_Importer
     {
         $this->youtube_api = new EYSS_YouTube_API();
 
-        add_action('wp_ajax_eyss_import_videos', array($this, 'ajax_import_videos'));
-        add_action('wp_ajax_eyss_get_import_progress', array($this, 'ajax_get_import_progress'));
+        // Remove duplicate AJAX handlers - handled by admin settings class
+        // add_action('wp_ajax_eyss_import_videos', array($this, 'ajax_import_videos'));
+        // add_action('wp_ajax_eyss_get_import_progress', array($this, 'ajax_get_import_progress'));
         add_action('eyss_sync_videos_cron', array($this, 'scheduled_video_sync'));
 
         // Background import hook

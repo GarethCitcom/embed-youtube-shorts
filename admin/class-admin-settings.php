@@ -758,7 +758,16 @@ class EYSS_Admin_Settings
 
         // Start background import
         $importer = new EYSS_Video_Importer();
-        wp_schedule_single_event(time() + 5, 'eyss_bg_import', array($channel_id, $force_refresh));
+
+        // Try to schedule the event
+        $scheduled = wp_schedule_single_event(time() + 5, 'eyss_bg_import', array($channel_id, $force_refresh));
+
+        // Fallback: if scheduling fails or cron is disabled, run directly
+        $cron_disabled = defined('DISABLE_WP_CRON') && constant('DISABLE_WP_CRON');
+        if ($scheduled === false || $cron_disabled) {
+            // Run directly in the background using action hook
+            do_action('eyss_bg_import', $channel_id, $force_refresh);
+        }
 
         wp_send_json_success(array(
             'message' => __('Import started in background. Progress will update below.', 'embed-youtube-shorts'),
@@ -780,7 +789,7 @@ class EYSS_Admin_Settings
             wp_send_json_error(__('Security check failed.', 'embed-youtube-shorts'));
         }
 
-        $progress_key = isset($_GET['progress_key']) ? sanitize_text_field(wp_unslash($_GET['progress_key'])) : '';
+        $progress_key = isset($_POST['progress_key']) ? sanitize_text_field(wp_unslash($_POST['progress_key'])) : '';
 
         if (empty($progress_key)) {
             wp_send_json_error(__('Progress key is required.', 'embed-youtube-shorts'));

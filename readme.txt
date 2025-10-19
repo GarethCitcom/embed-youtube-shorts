@@ -4,7 +4,7 @@ Tags: youtube, shorts, embed, playlist, carousel
 Requires at least: 6.2
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.3.0
+Stable tag: 2.3.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -175,6 +175,13 @@ No, the plugin is optimized for performance with smart caching, efficient querie
 6. **Playlist Integration** - Automatic playlist detection and filtering options
 
 == Changelog ==
+
+= 2.3.1 - 2025-10-19 =
+* **Fixed**: Video import progress bar animation now properly displays real-time import progress
+* **Fixed**: Resolved AJAX handler conflicts preventing background import with progress tracking
+* **Enhanced**: Improved import progress polling with better error handling and retry logic
+* **Enhanced**: Added fallback import method when WordPress cron is disabled
+* **UI**: Progress bar now shows smooth CSS animations during video import process
 
 = 2.3.0 - 2025-10-18 =
 * **Enhanced**: Complete WordPress.org compliance - achieved 100% plugin directory readiness

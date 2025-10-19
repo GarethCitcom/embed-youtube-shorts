@@ -17,7 +17,7 @@ $plugin_info = array(
     'name' => 'Embed YouTube Shorts',
     'slug' => 'embed-youtube-shorts',
     'plugin' => 'embed-youtube-shorts/embed-youtube-shorts.php',
-    'new_version' => '2.3.0',
+    'new_version' => '2.3.1',
     'requires' => '5.0',
     'tested' => '6.8.3',
     'requires_php' => '7.4',
@@ -27,7 +27,7 @@ $plugin_info = array(
     'homepage' => 'https://plugins.citcom.support/eyss/',
     'description' => 'A comprehensive WordPress plugin that imports and displays YouTube Shorts using a custom post type system with playlist organization.',
     'last_updated' => date('Y-m-d H:i:s'),
-    'upgrade_notice' => 'WordPress.org compliance release! Complete security, performance, and code quality improvements. All external dependencies now included locally.',
+    'upgrade_notice' => 'Bug fix release! Fixed video import progress bar animation and improved background import reliability with better error handling.',
     'compatibility' => '6.8.3'
 );
 
