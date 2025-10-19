@@ -1,0 +1,72 @@
+{
+    "name": "citcom/embed-youtube-shorts",
+    "description": "WordPress plugin for displaying YouTube Shorts from channel playlists with professional carousel, grid, and list layouts",
+    "type": "wordpress-plugin",
+    "keywords": [
+        "youtube",
+        "shorts",
+        "embed",
+        "playlist",
+        "carousel"
+    ],
+    "homepage": "https://plugins.citcom.support/eyss",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Gareth Hale, CitCom.",
+            "email": "gareth@citcom.co.uk",
+            "homepage": "https://citcom.co.uk",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/GarethCitcom/embed-youtube-shorts/issues",
+        "source": "https://github.com/GarethCitcom/embed-youtube-shorts",
+        "docs": "https://plugins.citcom.support/eyss"
+    },
+    "require": {
+        "php": ">=7.4",
+        "wordpress": ">=5.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0",
+        "wp-coding-standards/wpcs": "^3.0",
+        "phpcompatibility/phpcompatibility-wp": "^2.1"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        },
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "scripts": {
+        "phpcs": "phpcs --standard=WordPress .",
+        "phpcbf": "phpcbf --standard=WordPress .",
+        "test": "phpunit",
+        "lint": "find . -name '*.php' -exec php -l {} \\;"
+    },
+    "extra": {
+        "wordpress-plugin": {
+            "slug": "embed-youtube-shorts",
+            "version": "2.2.4",
+            "tested": "6.8",
+            "requires": "5.0",
+            "requires-php": "7.4"
+        }
+    },
+    "archive": {
+        "exclude": [
+            "/.git",
+            "/.gitignore",
+            "/composer.json",
+            "/composer.lock",
+            "/phpunit.xml",
+            "/tests",
+            "/node_modules",
+            "*.log",
+            "*.tmp",
+            "/update-server.php"
+        ]
+    }
+}

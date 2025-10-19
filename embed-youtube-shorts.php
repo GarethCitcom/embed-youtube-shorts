@@ -4,11 +4,15 @@
  * Plugin Name: Embed YouTube Shorts
  * Plugin URI: https://plugins.citcom.support/eyss
  * Description: Display YouTube Shorts from a channel playlist in various layouts using the YouTube API.
- * Version: 2.2.4
- * Author: CitCom.
+ * Version: 2.3.0
+ * Author: Gareth Hale, CitCom.
  * Author URI: https://citcom.co.uk
  * License: GPL v2 or later
  * Text Domain: embed-youtube-shorts
+ * Domain Path: /languages
+ * Requires at least: 6.2
+ * Tested up to: 6.8
+ * Requires PHP: 7.4
  */
 
 // Prevent direct access
@@ -16,10 +20,25 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// Check WordPress version compatibility
+if (version_compare(get_bloginfo('version'), '6.2', '<')) {
+    add_action('admin_notices', function () {
+        echo '<div class="notice notice-error"><p>';
+        printf(
+            /* translators: %1$s is the current WordPress version, %2$s is the required version */
+            esc_html__('Embed YouTube Shorts requires WordPress %2$s or higher. You are running version %1$s. Please update WordPress.', 'embed-youtube-shorts'),
+            esc_html(get_bloginfo('version')),
+            '6.2'
+        );
+        echo '</p></div>';
+    });
+    return;
+}
+
 // Define plugin constants
 define('EYSS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('EYSS_PLUGIN_PATH', plugin_dir_path(__FILE__));
-define('EYSS_PLUGIN_VERSION', '2.2.4');
+define('EYSS_PLUGIN_VERSION', '2.3.0');
 
 /**
  * Main plugin class
@@ -57,10 +76,6 @@ class EmbedYouTubeShorts
         add_action('eyss_sync_videos_cron', array($this, 'handle_scheduled_sync'));
         add_action('eyss_daily_import', array($this, 'handle_daily_import'));
 
-        // Add update checker hooks
-        add_filter('pre_set_site_transient_update_plugins', array($this, 'check_for_updates'));
-        add_filter('plugins_api', array($this, 'plugin_info'), 10, 3);
-
         register_uninstall_hook(__FILE__, array('EmbedYouTubeShorts', 'uninstall'));
     }
 
@@ -69,9 +84,6 @@ class EmbedYouTubeShorts
      */
     public function init()
     {
-        // Load text domain for translations
-        load_plugin_textdomain('embed-youtube-shorts', false, dirname(plugin_basename(__FILE__)) . '/languages');
-
         // Include required files
         $this->include_files();
 
@@ -84,15 +96,11 @@ class EmbedYouTubeShorts
      */
     private function include_files()
     {
-        error_log('EYSS: include_files() called');
         require_once EYSS_PLUGIN_PATH . 'includes/class-youtube-api.php';
-        error_log('EYSS: Including class-post-type.php');
         require_once EYSS_PLUGIN_PATH . 'includes/class-post-type.php';
         require_once EYSS_PLUGIN_PATH . 'includes/class-video-importer.php';
         require_once EYSS_PLUGIN_PATH . 'includes/class-shortcode.php';
         require_once EYSS_PLUGIN_PATH . 'admin/class-admin-settings.php';
-
-        error_log('EYSS: All files included');
     }
 
     /**
@@ -100,10 +108,7 @@ class EmbedYouTubeShorts
      */
     private function init_components()
     {
-        error_log('EYSS: init_components() called');
-
         // Initialize post type
-        error_log('EYSS: Creating EYSS_Post_Type instance');
         new EYSS_Post_Type();
 
         // Initialize video importer
@@ -127,10 +132,10 @@ class EmbedYouTubeShorts
      */
     public function enqueue_frontend_assets()
     {
-        // Enqueue Splide.js CSS from CDN
+        // Enqueue Splide.js CSS from local vendor files
         wp_enqueue_style(
             'splide-css',
-            'https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css',
+            EYSS_PLUGIN_URL . 'assets/vendor/splide/splide.min.css',
             array(),
             '4.1.4'
         );
@@ -142,10 +147,10 @@ class EmbedYouTubeShorts
             EYSS_PLUGIN_VERSION
         );
 
-        // Enqueue Splide.js from CDN
+        // Enqueue Splide.js from local vendor files
         wp_enqueue_script(
             'splide-js',
-            'https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js',
+            EYSS_PLUGIN_URL . 'assets/vendor/splide/splide.min.js',
             array(),
             '4.1.4',
             true
@@ -306,7 +311,9 @@ class EmbedYouTubeShorts
         // Drop cache table
         global $wpdb;
         $table_name = $wpdb->prefix . 'eyss_cache';
-        $wpdb->query("DROP TABLE IF EXISTS $table_name");
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange -- Direct query needed for plugin uninstall cleanup, no caching required for uninstall operations
+        $wpdb->query($wpdb->prepare("DROP TABLE IF EXISTS %i", $table_name));
 
         // Clear scheduled events
         wp_clear_scheduled_hook('eyss_clear_cache');
@@ -323,13 +330,6 @@ class EmbedYouTubeShorts
     {
         $importer = new EYSS_Video_Importer();
         $result = $importer->import_channel_videos($channel_id, $force_refresh);
-
-        // Log the result for debugging
-        if (is_wp_error($result)) {
-            error_log('EYSS Background Import Error: ' . $result->get_error_message());
-        } else {
-            error_log('EYSS Background Import Completed: ' . json_encode($result));
-        }
     }
 
     /**
@@ -397,6 +397,7 @@ class EmbedYouTubeShorts
             // Check if video already exists
             $existing = get_posts(array(
                 'post_type' => 'youtube_short',
+                // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Required to check for existing videos by YouTube ID to prevent duplicates during import
                 'meta_query' => array(
                     array(
                         'key' => '_eyss_video_id',
@@ -415,9 +416,6 @@ class EmbedYouTubeShorts
                 }
             }
         }
-
-        // Log sync results
-        error_log("EYSS Scheduled Sync: Imported {$imported_count} new videos");
     }
 
     /**
@@ -437,12 +435,8 @@ class EmbedYouTubeShorts
         $api_key = isset($settings['api_key']) ? $settings['api_key'] : '';
 
         if (empty($channel_id) || empty($api_key)) {
-            error_log('EYSS Daily Import: Missing API key or channel ID');
             return;
         }
-
-        // Log the start of daily import
-        error_log('EYSS Daily Import: Starting automatic import for channel ' . $channel_id);
 
         // Use the existing importer to perform a light sync (new videos only)
         $this->sync_recent_videos($channel_id, 1); // Check for videos from last 24 hours
@@ -453,21 +447,13 @@ class EmbedYouTubeShorts
 
         if ($last_full_import < $one_week_ago) {
             // Do a more comprehensive import weekly
-            error_log('EYSS Daily Import: Performing weekly full sync');
-
             $importer = new EYSS_Video_Importer();
             $result = $importer->import_channel_videos($channel_id, false);
 
             if (!is_wp_error($result)) {
                 update_option('eyss_last_full_auto_import', time());
-                error_log('EYSS Daily Import: Weekly full sync completed');
-            } else {
-                error_log('EYSS Daily Import: Weekly full sync failed - ' . $result->get_error_message());
             }
         }
-
-        // Log completion
-        error_log('EYSS Daily Import: Automatic import completed');
     }
 
     /**
@@ -512,95 +498,16 @@ class EmbedYouTubeShorts
         $table_name = $wpdb->prefix . 'eyss_cache';
 
         // Delete expired entries
-        $wpdb->query("DELETE FROM $table_name WHERE expiry_time < NOW()");
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Direct query needed for cache maintenance, not suitable for WP caching
+        $wpdb->query($wpdb->prepare("DELETE FROM %i WHERE expiry_time < NOW()", $table_name));
 
         // Optimize table if too many deletions
-        $count = $wpdb->get_var("SELECT COUNT(*) FROM $table_name");
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Direct query needed for table optimization
+        $count = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM %i", $table_name));
         if ($count > 1000) {
-            $wpdb->query("OPTIMIZE TABLE $table_name");
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Direct query needed for table optimization, not suitable for WP caching
+            $wpdb->query($wpdb->prepare("OPTIMIZE TABLE %i", $table_name));
         }
-    }
-
-    /**
-     * Check for plugin updates from custom server
-     */
-    public function check_for_updates($transient)
-    {
-        if (empty($transient->checked)) {
-            return $transient;
-        }
-
-        $plugin_slug = plugin_basename(__FILE__);
-        $plugin_data = get_plugin_data(__FILE__);
-        $current_version = $plugin_data['Version'];
-
-        // Check if our plugin needs updating
-        $remote_version = $this->get_remote_version();
-
-        if (version_compare($current_version, $remote_version, '<')) {
-            $transient->response[$plugin_slug] = (object) array(
-                'slug' => 'embed-youtube-shorts',
-                'new_version' => $remote_version,
-                'url' => 'https://plugins.citcom.support/eyss/',
-                'package' => 'https://plugins.citcom.support/eyss/embed-youtube-shorts.zip'
-            );
-        }
-
-        return $transient;
-    }
-
-    /**
-     * Get remote version from update server
-     */
-    private function get_remote_version()
-    {
-        $request = wp_remote_get('https://plugins.citcom.support/eyss/update-check.json');
-
-        if (!is_wp_error($request) && wp_remote_retrieve_response_code($request) === 200) {
-            $body = wp_remote_retrieve_body($request);
-            $data = json_decode($body, true);
-
-            if (isset($data['new_version'])) {
-                return $data['new_version'];
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Plugin information for update details
-     */
-    public function plugin_info($result, $action, $args)
-    {
-        if ($action !== 'plugin_information' || $args->slug !== 'embed-youtube-shorts') {
-            return $result;
-        }
-
-        $request = wp_remote_get('https://plugins.citcom.support/eyss/update-info.json');
-
-        if (!is_wp_error($request) && wp_remote_retrieve_response_code($request) === 200) {
-            $body = wp_remote_retrieve_body($request);
-            $data = json_decode($body, true);
-
-            return (object) array(
-                'name' => $data['name'],
-                'slug' => $data['slug'],
-                'version' => $data['version'],
-                'author' => $data['author'],
-                'homepage' => $data['homepage'],
-                'requires' => $data['requires'],
-                'tested' => $data['tested'],
-                'requires_php' => $data['requires_php'],
-                'download_link' => $data['download_url'],
-                'sections' => $data['sections'],
-                'banners' => $data['banners'],
-                'icons' => $data['icons'],
-                'last_updated' => $data['last_updated']
-            );
-        }
-
-        return $result;
     }
 }
 
@@ -625,6 +532,4 @@ register_activation_hook(__FILE__, function () {
 
     // Flush rewrite rules to ensure taxonomy and post type are properly registered
     flush_rewrite_rules();
-
-    error_log('EYSS: Plugin activated and rewrite rules flushed');
 });

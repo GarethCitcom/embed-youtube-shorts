@@ -219,6 +219,7 @@ class EYSS_Video_Importer
         // Check if video already exists
         $existing_posts = get_posts(array(
             'post_type' => 'youtube_short',
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Required to check for existing videos by YouTube ID to prevent duplicates during import, essential for video import functionality
             'meta_query' => array(
                 array(
                     'key' => '_eyss_video_id',
@@ -247,7 +248,7 @@ class EYSS_Video_Importer
             'post_content' => wp_kses_post($video_data['snippet']['description']),
             'post_excerpt' => wp_trim_words($video_data['snippet']['description'], 55),
             'post_status' => 'publish',
-            'post_date' => date('Y-m-d H:i:s', strtotime($video_data['snippet']['publishedAt'])),
+            'post_date' => gmdate('Y-m-d H:i:s', strtotime($video_data['snippet']['publishedAt'])),
         );
 
         if ($is_update) {
@@ -268,7 +269,7 @@ class EYSS_Video_Importer
             '_eyss_duration' => $duration,
             '_eyss_channel_id' => $channel_id,
             '_eyss_channel_title' => $video_data['snippet']['channelTitle'] ?? '',
-            '_eyss_published_at' => date('Y-m-d\TH:i', strtotime($video_data['snippet']['publishedAt'])),
+            '_eyss_published_at' => gmdate('Y-m-d\TH:i', strtotime($video_data['snippet']['publishedAt'])),
             '_eyss_thumbnail_url' => $video_data['snippet']['thumbnails']['high']['url'] ?? $video_data['snippet']['thumbnails']['default']['url'] ?? '',
             '_eyss_view_count' => $video_data['statistics']['viewCount'] ?? 0,
             '_eyss_like_count' => $video_data['statistics']['likeCount'] ?? 0,
@@ -322,7 +323,6 @@ class EYSS_Video_Importer
             $video_playlists = $this->youtube_api->get_video_playlist_membership($video_id, $channel_id);
 
             if (is_wp_error($video_playlists)) {
-                error_log('EYSS: Failed to get playlist membership for video ' . $video_id . ': ' . $video_playlists->get_error_message());
                 return;
             }
 
@@ -354,8 +354,6 @@ class EYSS_Video_Importer
                         // Store additional playlist metadata
                         update_term_meta($term_result['term_id'], '_eyss_playlist_id', $playlist_id);
                         update_term_meta($term_result['term_id'], '_eyss_playlist_thumbnail', $playlist_data['thumbnail'] ?? '');
-
-                        error_log('EYSS: Created new playlist term: ' . $playlist_title . ' (ID: ' . $playlist_id . ')');
                     }
                 }
             }
@@ -363,10 +361,9 @@ class EYSS_Video_Importer
             // Assign terms to post
             if (!empty($term_ids)) {
                 wp_set_post_terms($post_id, $term_ids, 'youtube_playlist');
-                error_log('EYSS: Assigned video ' . $video_id . ' to ' . count($term_ids) . ' playlists');
             }
         } catch (Exception $e) {
-            error_log('EYSS: Error assigning playlists for video ' . $video_id . ': ' . $e->getMessage());
+            // Error occurred during playlist assignment
         }
     }
 
@@ -378,7 +375,6 @@ class EYSS_Video_Importer
         $playlists = $this->youtube_api->get_all_channel_playlists($channel_id);
 
         if (is_wp_error($playlists)) {
-            error_log('EYSS: Failed to get channel playlists: ' . $playlists->get_error_message());
             return 0;
         }
 
@@ -414,7 +410,6 @@ class EYSS_Video_Importer
                     update_term_meta($term_result['term_id'], '_eyss_video_count', $playlist['contentDetails']['itemCount'] ?? 0);
 
                     $imported_count++;
-                    error_log('EYSS: Imported playlist: ' . $playlist_title . ' (ID: ' . $playlist_id . ')');
                 }
             }
         }
@@ -431,7 +426,7 @@ class EYSS_Video_Importer
             wp_send_json_error(__('Permission denied.', 'embed-youtube-shorts'));
         }
 
-        if (!wp_verify_nonce($_POST['nonce'], 'eyss_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'eyss_nonce')) {
             wp_send_json_error(__('Security check failed.', 'embed-youtube-shorts'));
         }
 
@@ -443,12 +438,8 @@ class EYSS_Video_Importer
             wp_send_json_error(__('Channel ID not configured. Please set it in settings first.', 'embed-youtube-shorts'));
         }
 
-        error_log('EYSS: Starting simple import for channel: ' . $channel_id);
-
         // Simple, direct import - no chunking, just process what we can
         try {
-            set_time_limit(300); // 5 minutes max
-
             $result = $this->simple_import_process($channel_id, $force_refresh);
 
             if (is_wp_error($result)) {
@@ -457,7 +448,6 @@ class EYSS_Video_Importer
                 wp_send_json_success($result);
             }
         } catch (Exception $e) {
-            error_log('EYSS: Import exception: ' . $e->getMessage());
             wp_send_json_error('Import failed: ' . $e->getMessage());
         }
     }
@@ -467,11 +457,9 @@ class EYSS_Video_Importer
      */
     public function simple_import_process($channel_id, $force_refresh = false)
     {
-        error_log('EYSS: Starting simple import process with playlist detection');
 
         // Step 1: Import all playlists first
         $playlists_imported = $this->import_channel_playlists($channel_id);
-        error_log('EYSS: Imported ' . $playlists_imported . ' playlists');
 
         // Step 2: Get uploads playlist
         $uploads_playlist = $this->youtube_api->get_uploads_playlist_id($channel_id);
@@ -479,13 +467,11 @@ class EYSS_Video_Importer
             return $uploads_playlist;
         }
 
-        error_log('EYSS: Got uploads playlist: ' . $uploads_playlist);        // Step 2: Get recent videos (limit to 200 to avoid timeout)
+        // Step 2: Get recent videos (limit to 200 to avoid timeout)
         $videos = $this->youtube_api->get_playlist_videos($uploads_playlist, 200);
         if (is_wp_error($videos)) {
             return $videos;
         }
-
-        error_log('EYSS: Got ' . count($videos) . ' videos from playlist');
 
         // Step 3: Extract video IDs
         $video_ids = array();
@@ -513,8 +499,6 @@ class EYSS_Video_Importer
             }
         }
 
-        error_log('EYSS: Got details for ' . count($all_video_details) . ' videos');
-
         // Step 5: Process videos and import shorts
         $imported = 0;
         $updated = 0;
@@ -534,9 +518,6 @@ class EYSS_Video_Importer
             }
 
             // Log progress every 10 videos
-            if ($processed % 10 === 0) {
-                error_log("EYSS: Progress - Processed: $processed, Imported: $imported, Skipped: $skipped");
-            }
         }
 
         $message = sprintf(
@@ -546,8 +527,6 @@ class EYSS_Video_Importer
             $updated,
             $skipped
         );
-
-        error_log('EYSS: ' . $message);
 
         return array(
             'message' => $message,
@@ -563,16 +542,8 @@ class EYSS_Video_Importer
      */
     public function background_import_handler($channel_id, $force_refresh = false)
     {
-        error_log('EYSS: Background import handler called for channel: ' . $channel_id);
-
         // Call the main import function
         $result = $this->import_channel_videos($channel_id, $force_refresh);
-
-        if (is_wp_error($result)) {
-            error_log('EYSS: Background import failed: ' . $result->get_error_message());
-        } else {
-            error_log('EYSS: Background import completed successfully');
-        }
     }
 
     /**
@@ -580,8 +551,6 @@ class EYSS_Video_Importer
      */
     public function process_single_chunk($channel_id, $force_refresh = false)
     {
-        error_log('EYSS: Processing single chunk for channel: ' . $channel_id);
-
         $progress_key = 'eyss_import_progress_' . $channel_id;
         $progress = get_option($progress_key, array());
 
@@ -731,7 +700,16 @@ class EYSS_Video_Importer
             wp_send_json_error(__('Permission denied.', 'embed-youtube-shorts'));
         }
 
-        $progress_key = sanitize_text_field($_GET['progress_key'] ?? '');
+        // Verify nonce
+        if (!isset($_GET['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['nonce'])), 'eyss_nonce')) {
+            wp_send_json_error(__('Security check failed.', 'embed-youtube-shorts'));
+        }
+
+        $progress_key = isset($_GET['progress_key']) ? sanitize_text_field(wp_unslash($_GET['progress_key'])) : '';
+
+        if (empty($progress_key)) {
+            wp_send_json_error(__('Progress key is required.', 'embed-youtube-shorts'));
+        }
 
         if (empty($progress_key)) {
             wp_send_json_error(__('Progress key is required.', 'embed-youtube-shorts'));

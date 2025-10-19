@@ -38,6 +38,9 @@ npm-debug.log*
 vendor/
 composer.lock
 
+# Allow assets/vendor for WordPress.org compliance (external libraries)
+!assets/vendor/
+
 # Environment files
 .env
 .env.local

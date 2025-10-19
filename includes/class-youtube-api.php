@@ -62,6 +62,7 @@ class EYSS_YouTube_API
         if (is_wp_error($response)) {
             return array(
                 'success' => false,
+                // translators: %s is the error message from the API
                 'message' => sprintf(__('API Error: %s', 'embed-youtube-shorts'), $response->get_error_message())
             );
         }
@@ -72,6 +73,7 @@ class EYSS_YouTube_API
         if (isset($data['error'])) {
             return array(
                 'success' => false,
+                // translators: %s is the error message from YouTube API
                 'message' => sprintf(__('YouTube API Error: %s', 'embed-youtube-shorts'), $data['error']['message'])
             );
         }
@@ -86,6 +88,7 @@ class EYSS_YouTube_API
         $channel = $data['items'][0];
         return array(
             'success' => true,
+            // translators: %s is the YouTube channel title/name
             'message' => sprintf(__('Connection successful! Channel: %s', 'embed-youtube-shorts'), $channel['snippet']['title'])
         );
     }
@@ -292,15 +295,8 @@ class EYSS_YouTube_API
                     }
                 }
             } catch (Exception $e) {
-                // Log parsing errors
-                error_log('EYSS: Duration parsing error for video ' . ($video['id'] ?? 'unknown') . ': ' . $e->getMessage());
+                // Parsing error occurred
             }
-        }
-
-        // Debug logging (remove in production)
-        if (WP_DEBUG) {
-            error_log('EYSS Debug: Found ' . count($video_details) . ' total videos, ' . count($shorts) . ' shorts');
-            error_log('EYSS Debug: First 5 videos: ' . print_r(array_slice($debug_info, 0, 5), true));
         }
 
         // Cache the result
@@ -517,9 +513,6 @@ class EYSS_YouTube_API
             return ($interval->h * 3600) + ($interval->i * 60) + $interval->s;
         } catch (Exception $e) {
             // Fallback parsing for malformed durations
-            if (WP_DEBUG) {
-                error_log('EYSS: Failed to parse duration "' . $duration . '": ' . $e->getMessage());
-            }
 
             // Try manual parsing as fallback
             if (preg_match('/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/', $duration, $matches)) {
@@ -712,8 +705,10 @@ class EYSS_YouTube_API
 
         $table_name = $wpdb->prefix . 'eyss_cache';
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom cache table query, cannot use wp_cache_* functions as this IS the caching system
         $result = $wpdb->get_row($wpdb->prepare(
-            "SELECT cache_data FROM $table_name WHERE cache_key = %s AND expiry_time > NOW()",
+            "SELECT cache_data FROM %i WHERE cache_key = %s AND expiry_time > NOW()",
+            $table_name,
             $cache_key
         ));
 
@@ -732,8 +727,9 @@ class EYSS_YouTube_API
         global $wpdb;
 
         $table_name = $wpdb->prefix . 'eyss_cache';
-        $expiry_time = date('Y-m-d H:i:s', time() + $expiry_seconds);
+        $expiry_time = gmdate('Y-m-d H:i:s', time() + $expiry_seconds);
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom cache table insert/update, cannot use wp_cache_* functions as this IS the caching system
         $wpdb->replace($table_name, array(
             'cache_key' => $cache_key,
             'cache_data' => maybe_serialize($data),
@@ -750,7 +746,8 @@ class EYSS_YouTube_API
 
         $table_name = $wpdb->prefix . 'eyss_cache';
 
-        $wpdb->query("DELETE FROM $table_name WHERE expiry_time < NOW()");
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom cache table cleanup, cannot use wp_cache_* functions as this IS the caching system
+        $wpdb->query($wpdb->prepare("DELETE FROM %i WHERE expiry_time < NOW()", $table_name));
     }
 
     /**

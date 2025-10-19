@@ -27,12 +27,14 @@ function eyss_uninstall_cleanup()
 
     // Drop custom cache table
     $table_name = $wpdb->prefix . 'eyss_cache';
-    $wpdb->query("DROP TABLE IF EXISTS $table_name");
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange -- Required for plugin uninstall cleanup, removing custom table that was created during plugin activation
+    $wpdb->query($wpdb->prepare("DROP TABLE IF EXISTS %i", $table_name));
 
     // Clear any scheduled events
     wp_clear_scheduled_hook('eyss_clear_cache');
 
     // Remove any cached data from wp_options that might have been created
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Required for plugin uninstall cleanup, removing all plugin-specific options that may not be covered by delete_option()
     $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE 'eyss_%'");
 
     // Clean up any temporary files if they exist
@@ -45,22 +47,23 @@ function eyss_uninstall_cleanup()
 }
 
 /**
- * Recursively remove directory and its contents
+ * Recursively remove directory and its contents using WordPress filesystem
  */
 function eyss_recursive_rmdir($dir)
 {
-    if (is_dir($dir)) {
-        $objects = scandir($dir);
-        foreach ($objects as $object) {
-            if ($object != "." && $object != "..") {
-                if (is_dir($dir . "/" . $object) && !is_link($dir . "/" . $object)) {
-                    eyss_recursive_rmdir($dir . "/" . $object);
-                } else {
-                    unlink($dir . "/" . $object);
-                }
-            }
-        }
-        rmdir($dir);
+    if (!is_dir($dir)) {
+        return;
+    }
+
+    // Initialize the WordPress filesystem
+    global $wp_filesystem;
+    if (empty($wp_filesystem)) {
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        WP_Filesystem();
+    }
+
+    if ($wp_filesystem) {
+        $wp_filesystem->rmdir($dir, true); // true = recursive
     }
 }
 

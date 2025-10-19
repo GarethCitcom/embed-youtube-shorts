@@ -17,8 +17,6 @@ class EYSS_Post_Type
      */
     public function __construct()
     {
-        error_log('EYSS: Post type class constructor called');
-
         // Register post type and taxonomies early in init
         add_action('init', array($this, 'register_post_type'), 0);
         add_action('init', array($this, 'register_playlist_taxonomy'), 5);
@@ -29,23 +27,16 @@ class EYSS_Post_Type
 
         // Add debug hook to verify registration
         add_action('init', array($this, 'debug_post_type'), 999);
-
-        error_log('EYSS: All hooks registered');
     }
     /**
      * Register YouTube Shorts custom post type
      */
     public function register_post_type()
     {
-        error_log('EYSS: register_post_type() method called');
-
         // Check if already registered
         if (post_type_exists('youtube_short')) {
-            error_log('EYSS: Post type already exists, skipping registration');
             return;
         }
-
-        error_log('EYSS: Attempting to register youtube_short post type');
 
         $args = array(
             'label'              => 'YouTube Shorts',
@@ -81,11 +72,9 @@ class EYSS_Post_Type
         $result = register_post_type('youtube_short', $args);
 
         if (is_wp_error($result)) {
-            error_log('EYSS: Post type registration FAILED: ' . $result->get_error_message());
             return false;
         }
 
-        error_log('EYSS: Post type registration SUCCESS');
         return true;
     }
 
@@ -94,15 +83,10 @@ class EYSS_Post_Type
      */
     public function register_playlist_taxonomy()
     {
-        error_log('EYSS: register_playlist_taxonomy() method called');
-
         // Check if already registered
         if (taxonomy_exists('youtube_playlist')) {
-            error_log('EYSS: Playlist taxonomy already exists, skipping registration');
             return;
         }
-
-        error_log('EYSS: Attempting to register youtube_playlist taxonomy');
 
         $labels = array(
             'name'                       => 'YouTube Playlists',
@@ -141,12 +125,9 @@ class EYSS_Post_Type
         $result = register_taxonomy('youtube_playlist', array('youtube_short'), $args);
 
         if (is_wp_error($result)) {
-            error_log('EYSS: Playlist taxonomy registration FAILED: ' . $result->get_error_message());
             return false;
         } else {
-            error_log('EYSS: Playlist taxonomy registration SUCCESS');
             return true;
-            error_log('EYSS: Playlist taxonomy registration SUCCESS');
         }
     }
 
@@ -155,37 +136,25 @@ class EYSS_Post_Type
      */
     public function debug_post_type()
     {
-        error_log('EYSS: debug_post_type() method called');
-
         if (post_type_exists('youtube_short')) {
-            error_log('EYSS: SUCCESS - YouTube Shorts post type exists and is registered');
+            // Post type exists and is registered
         } else {
-            error_log('EYSS: ERROR - YouTube Shorts post type NOT registered');
-
             // Try manual registration as fallback
-            error_log('EYSS: Attempting fallback manual registration');
             $this->manual_register_fallback();
         }
 
         // Debug taxonomy registration
         if (taxonomy_exists('youtube_playlist')) {
-            error_log('EYSS: SUCCESS - YouTube Playlist taxonomy exists and is registered');
             $tax_obj = get_taxonomy('youtube_playlist');
-            error_log('EYSS: Taxonomy object types: ' . implode(', ', $tax_obj->object_type));
         } else {
-            error_log('EYSS: ERROR - YouTube Playlist taxonomy NOT registered');
             // Try to register taxonomy now
-            error_log('EYSS: Attempting taxonomy registration...');
             $this->register_playlist_taxonomy();
         }
 
-        // Log all registered post types for debugging
+        // Check registered post types
         $post_types = get_post_types(array(), 'names');
-        if (in_array('youtube_short', $post_types)) {
-            error_log('EYSS: youtube_short found in post types list');
-        } else {
-            error_log('EYSS: youtube_short NOT found in post types list');
-            error_log('EYSS: Available post types: ' . implode(', ', $post_types));
+        if (!in_array('youtube_short', $post_types)) {
+            // Post type not found in list
         }
     }
 
@@ -194,8 +163,6 @@ class EYSS_Post_Type
      */
     public function manual_register_fallback()
     {
-        error_log('EYSS: Running manual fallback registration');
-
         register_post_type('youtube_short', array(
             'labels' => array(
                 'name' => 'YouTube Shorts',
@@ -207,12 +174,6 @@ class EYSS_Post_Type
             'menu_icon' => 'dashicons-video-alt3',
             'supports' => array('title', 'editor', 'thumbnail')
         ));
-
-        if (post_type_exists('youtube_short')) {
-            error_log('EYSS: Fallback registration SUCCESS');
-        } else {
-            error_log('EYSS: Fallback registration FAILED');
-        }
     }
 
     /**
@@ -266,67 +227,67 @@ class EYSS_Post_Type
         <table class="form-table">
             <tr>
                 <th scope="row">
-                    <label for="eyss_video_id"><?php _e('YouTube Video ID', 'embed-youtube-shorts'); ?></label>
+                    <label for="eyss_video_id"><?php esc_html_e('YouTube Video ID', 'embed-youtube-shorts'); ?></label>
                 </th>
                 <td>
                     <input type="text" id="eyss_video_id" name="eyss_video_id" value="<?php echo esc_attr($video_id); ?>" class="regular-text" />
-                    <p class="description"><?php _e('The unique YouTube video identifier.', 'embed-youtube-shorts'); ?></p>
+                    <p class="description"><?php esc_html_e('The unique YouTube video identifier.', 'embed-youtube-shorts'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="eyss_youtube_url"><?php _e('YouTube URL', 'embed-youtube-shorts'); ?></label>
+                    <label for="eyss_youtube_url"><?php esc_html_e('YouTube URL', 'embed-youtube-shorts'); ?></label>
                 </th>
                 <td>
                     <input type="url" id="eyss_youtube_url" name="eyss_youtube_url" value="<?php echo esc_url($youtube_url); ?>" class="regular-text" />
-                    <p class="description"><?php _e('Full YouTube video URL.', 'embed-youtube-shorts'); ?></p>
+                    <p class="description"><?php esc_html_e('Full YouTube video URL.', 'embed-youtube-shorts'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="eyss_duration"><?php _e('Duration (seconds)', 'embed-youtube-shorts'); ?></label>
+                    <label for="eyss_duration"><?php esc_html_e('Duration (seconds)', 'embed-youtube-shorts'); ?></label>
                 </th>
                 <td>
                     <input type="number" id="eyss_duration" name="eyss_duration" value="<?php echo esc_attr($duration); ?>" min="0" max="180" />
-                    <p class="description"><?php _e('Video duration in seconds (max 180 for Shorts).', 'embed-youtube-shorts'); ?></p>
+                    <p class="description"><?php esc_html_e('Video duration in seconds (max 180 for Shorts).', 'embed-youtube-shorts'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="eyss_channel_id"><?php _e('Channel ID', 'embed-youtube-shorts'); ?></label>
+                    <label for="eyss_channel_id"><?php esc_html_e('Channel ID', 'embed-youtube-shorts'); ?></label>
                 </th>
                 <td>
                     <input type="text" id="eyss_channel_id" name="eyss_channel_id" value="<?php echo esc_attr($channel_id); ?>" class="regular-text" />
-                    <p class="description"><?php _e('YouTube channel identifier.', 'embed-youtube-shorts'); ?></p>
+                    <p class="description"><?php esc_html_e('YouTube channel identifier.', 'embed-youtube-shorts'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="eyss_channel_title"><?php _e('Channel Title', 'embed-youtube-shorts'); ?></label>
+                    <label for="eyss_channel_title"><?php esc_html_e('Channel Title', 'embed-youtube-shorts'); ?></label>
                 </th>
                 <td>
                     <input type="text" id="eyss_channel_title" name="eyss_channel_title" value="<?php echo esc_attr($channel_title); ?>" class="regular-text" />
-                    <p class="description"><?php _e('YouTube channel name.', 'embed-youtube-shorts'); ?></p>
+                    <p class="description"><?php esc_html_e('YouTube channel name.', 'embed-youtube-shorts'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="eyss_published_at"><?php _e('Published Date', 'embed-youtube-shorts'); ?></label>
+                    <label for="eyss_published_at"><?php esc_html_e('Published Date', 'embed-youtube-shorts'); ?></label>
                 </th>
                 <td>
                     <input type="datetime-local" id="eyss_published_at" name="eyss_published_at" value="<?php echo esc_attr($published_at); ?>" />
-                    <p class="description"><?php _e('When the video was published on YouTube.', 'embed-youtube-shorts'); ?></p>
+                    <p class="description"><?php esc_html_e('When the video was published on YouTube.', 'embed-youtube-shorts'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th scope="row">
-                    <label for="eyss_thumbnail_url"><?php _e('Thumbnail URL', 'embed-youtube-shorts'); ?></label>
+                    <label for="eyss_thumbnail_url"><?php esc_html_e('Thumbnail URL', 'embed-youtube-shorts'); ?></label>
                 </th>
                 <td>
                     <input type="url" id="eyss_thumbnail_url" name="eyss_thumbnail_url" value="<?php echo esc_url($thumbnail_url); ?>" class="regular-text" />
-                    <p class="description"><?php _e('URL of the video thumbnail image.', 'embed-youtube-shorts'); ?></p>
+                    <p class="description"><?php esc_html_e('URL of the video thumbnail image.', 'embed-youtube-shorts'); ?></p>
                     <?php if ($thumbnail_url): ?>
-                        <br><img src="<?php echo esc_url($thumbnail_url); ?>" style="max-width: 200px; margin-top: 10px;" alt="<?php _e('Video thumbnail', 'embed-youtube-shorts'); ?>">
+                        <br><img src="<?php echo esc_url($thumbnail_url); ?>" style="max-width: 200px; margin-top: 10px;" alt="<?php esc_attr_e('Video thumbnail', 'embed-youtube-shorts'); ?>">
                     <?php endif; ?>
                 </td>
             </tr>
@@ -345,20 +306,20 @@ class EYSS_Post_Type
         $last_updated = get_post_meta($post->ID, '_eyss_last_updated', true);
     ?>
         <p>
-            <strong><?php _e('View Count:', 'embed-youtube-shorts'); ?></strong><br>
+            <strong><?php esc_html_e('View Count:', 'embed-youtube-shorts'); ?></strong><br>
             <input type="number" name="eyss_view_count" value="<?php echo esc_attr($view_count); ?>" min="0" style="width: 100%;" />
         </p>
         <p>
-            <strong><?php _e('Like Count:', 'embed-youtube-shorts'); ?></strong><br>
+            <strong><?php esc_html_e('Like Count:', 'embed-youtube-shorts'); ?></strong><br>
             <input type="number" name="eyss_like_count" value="<?php echo esc_attr($like_count); ?>" min="0" style="width: 100%;" />
         </p>
         <p>
-            <strong><?php _e('Comment Count:', 'embed-youtube-shorts'); ?></strong><br>
+            <strong><?php esc_html_e('Comment Count:', 'embed-youtube-shorts'); ?></strong><br>
             <input type="number" name="eyss_comment_count" value="<?php echo esc_attr($comment_count); ?>" min="0" style="width: 100%;" />
         </p>
         <p>
-            <strong><?php _e('Last Updated:', 'embed-youtube-shorts'); ?></strong><br>
-            <em><?php echo $last_updated ? date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($last_updated)) : __('Never', 'embed-youtube-shorts'); ?></em>
+            <strong><?php esc_html_e('Last Updated:', 'embed-youtube-shorts'); ?></strong><br>
+            <em><?php echo $last_updated ? esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($last_updated))) : esc_html__('Never', 'embed-youtube-shorts'); ?></em>
         </p>
 <?php
     }
@@ -368,7 +329,7 @@ class EYSS_Post_Type
      */
     public function save_meta_boxes($post_id)
     {
-        if (!isset($_POST['eyss_meta_box_nonce']) || !wp_verify_nonce($_POST['eyss_meta_box_nonce'], 'eyss_save_meta_box')) {
+        if (!isset($_POST['eyss_meta_box_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['eyss_meta_box_nonce'])), 'eyss_save_meta_box')) {
             return;
         }
 
@@ -400,7 +361,7 @@ class EYSS_Post_Type
 
         foreach ($fields as $field) {
             if (isset($_POST[$field])) {
-                update_post_meta($post_id, '_' . $field, sanitize_text_field($_POST[$field]));
+                update_post_meta($post_id, '_' . $field, sanitize_text_field(wp_unslash($_POST[$field])));
             }
         }
 
@@ -436,7 +397,7 @@ class EYSS_Post_Type
             case 'eyss_thumbnail':
                 $thumbnail_url = get_post_meta($post_id, '_eyss_thumbnail_url', true);
                 if ($thumbnail_url) {
-                    echo '<img src="' . esc_url($thumbnail_url) . '" style="width: 60px; height: auto;" alt="' . __('Video thumbnail', 'embed-youtube-shorts') . '">';
+                    echo '<img src="' . esc_url($thumbnail_url) . '" style="width: 60px; height: auto;" alt="' . esc_attr__('Video thumbnail', 'embed-youtube-shorts') . '">';
                 } else {
                     echo '—';
                 }
@@ -446,7 +407,7 @@ class EYSS_Post_Type
                 $video_id = get_post_meta($post_id, '_eyss_video_id', true);
                 if ($video_id) {
                     echo '<code>' . esc_html($video_id) . '</code><br>';
-                    echo '<a href="https://www.youtube.com/watch?v=' . esc_attr($video_id) . '" target="_blank">' . __('View on YouTube', 'embed-youtube-shorts') . '</a>';
+                    echo '<a href="https://www.youtube.com/watch?v=' . esc_attr($video_id) . '" target="_blank">' . esc_html__('View on YouTube', 'embed-youtube-shorts') . '</a>';
                 } else {
                     echo '—';
                 }
@@ -457,7 +418,7 @@ class EYSS_Post_Type
                 if ($duration) {
                     $minutes = floor($duration / 60);
                     $seconds = $duration % 60;
-                    echo sprintf('%d:%02d', $minutes, $seconds);
+                    echo sprintf('%d:%02d', esc_html($minutes), esc_html($seconds));
                 } else {
                     echo '—';
                 }
@@ -470,9 +431,13 @@ class EYSS_Post_Type
                     foreach ($playlists as $playlist) {
                         $playlist_names[] = '<span style="background: #f0f0f1; padding: 2px 6px; border-radius: 3px; font-size: 11px;">' . esc_html($playlist->name) . '</span>';
                     }
-                    echo implode(' ', $playlist_names);
+                    echo wp_kses(implode(' ', $playlist_names), array(
+                        'span' => array(
+                            'style' => true
+                        )
+                    ));
                 } else {
-                    echo '<span style="color: #666; font-style: italic;">No playlists</span>';
+                    echo '<span style="color: #666; font-style: italic;">' . esc_html__('No playlists', 'embed-youtube-shorts') . '</span>';
                 }
                 break;
 
@@ -480,10 +445,10 @@ class EYSS_Post_Type
                 $views = get_post_meta($post_id, '_eyss_view_count', true);
                 $likes = get_post_meta($post_id, '_eyss_like_count', true);
                 if ($views) {
-                    echo '<strong>' . number_format($views) . '</strong> ' . __('views', 'embed-youtube-shorts') . '<br>';
+                    echo '<strong>' . esc_html(number_format($views)) . '</strong> ' . esc_html__('views', 'embed-youtube-shorts') . '<br>';
                 }
                 if ($likes) {
-                    echo '<strong>' . number_format($likes) . '</strong> ' . __('likes', 'embed-youtube-shorts');
+                    echo '<strong>' . esc_html(number_format($likes)) . '</strong> ' . esc_html__('likes', 'embed-youtube-shorts');
                 }
                 if (!$views && !$likes) {
                     echo '—';

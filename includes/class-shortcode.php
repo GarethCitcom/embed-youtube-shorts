@@ -87,6 +87,7 @@ class EYSS_Shortcode
             'posts_per_page' => intval($atts['count']),
             'orderby' => 'date',
             'order' => 'DESC',
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Required for filtering videos by channel and video ID, essential for shortcode functionality
             'meta_query' => array()
         );
 
@@ -171,8 +172,10 @@ class EYSS_Shortcode
         // Apply taxonomy queries
         if (!empty($tax_queries)) {
             if (count($tax_queries) > 1) {
+                // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Required for filtering videos by playlist taxonomy, essential for shortcode playlist filtering
                 $args['tax_query'] = array_merge(array('relation' => 'AND'), $tax_queries);
             } else {
+                // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Required for filtering videos by playlist taxonomy, essential for shortcode playlist filtering
                 $args['tax_query'] = $tax_queries;
             }
         }
@@ -251,22 +254,22 @@ class EYSS_Shortcode
                     <div class="eyss-search-input-wrapper">
                         <input type="text"
                             class="eyss-search-input"
-                            placeholder="<?php echo $search_placeholder; ?>"
+                            placeholder="<?php echo esc_attr($search_placeholder); ?>"
                             data-target="<?php echo esc_attr($instance_id); ?>">
-                        <button type="button" class="eyss-search-clear" title="<?php _e('Clear search', 'embed-youtube-shorts'); ?>" style="display: none;">
+                        <button type="button" class="eyss-search-clear" title="<?php esc_attr_e('Clear search', 'embed-youtube-shorts'); ?>" style="display: none;">
                             <span>&times;</span>
                         </button>
                     </div>
                     <div class="eyss-search-results-count">
-                        <span class="eyss-total-count"><?php echo $this->get_total_video_count($atts); ?></span>
-                        <?php _e('videos found', 'embed-youtube-shorts'); ?>
+                        <span class="eyss-total-count"><?php echo esc_html($this->get_total_video_count($atts)); ?></span>
+                        <?php esc_html_e('videos found', 'embed-youtube-shorts'); ?>
                     </div>
                 </div>
             <?php endif; ?>
 
             <?php if ($layout === 'carousel'): ?>
                 <?php
-                // Prepare Splide configuration
+                // Configure Splide carousel settings
                 $splide_config = array(
                     'type' => 'loop',
                     'focus' => 'center',
@@ -313,14 +316,14 @@ class EYSS_Shortcode
                                                 <?php endif; ?>
                                                 <?php if ($show_playlists && !empty($video['playlists'])): ?>
                                                     <div class="eyss-video-playlists">
-                                                        <span class="eyss-playlists-label"><?php _e('Playlists:', 'embed-youtube-shorts'); ?></span>
+                                                        <span class="eyss-playlists-label"><?php esc_html_e('Playlists:', 'embed-youtube-shorts'); ?></span>
                                                         <span class="eyss-playlists-list"><?php echo esc_html(implode(', ', $video['playlists'])); ?></span>
                                                     </div>
                                                 <?php endif; ?>
                                                 <?php if ($show_views && isset($video['view_count'])): ?>
                                                     <div class="eyss-video-stats">
-                                                        <span class="eyss-views"><?php echo esc_html($this->format_number($video['view_count'])); ?> <?php _e('views', 'embed-youtube-shorts'); ?></span>
-                                                        <span class="eyss-date"><?php echo esc_html(human_time_diff(strtotime($video['published_at']))); ?> <?php _e('ago', 'embed-youtube-shorts'); ?></span>
+                                                        <span class="eyss-views"><?php echo esc_html($this->format_number($video['view_count'])); ?> <?php esc_html_e('views', 'embed-youtube-shorts'); ?></span>
+                                                        <span class="eyss-date"><?php echo esc_html(human_time_diff(strtotime($video['published_at']))); ?> <?php esc_html_e('ago', 'embed-youtube-shorts'); ?></span>
                                                     </div>
                                                 <?php endif; ?>
                                             </div>
@@ -330,7 +333,9 @@ class EYSS_Shortcode
                                             class="eyss-video-link"
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            aria-label="<?php printf(__('Watch %s on YouTube', 'embed-youtube-shorts'), esc_attr($video['title'])); ?>">
+                                            aria-label="<?php
+                                                        // translators: %s is the video title
+                                                        printf(esc_attr__('Watch %s on YouTube', 'embed-youtube-shorts'), esc_attr($video['title'])); ?>">
                                         </a>
                                     </div>
                                 </li>
@@ -365,14 +370,14 @@ class EYSS_Shortcode
                                     <?php endif; ?>
                                     <?php if ($show_playlists && !empty($video['playlists'])): ?>
                                         <div class="eyss-video-playlists">
-                                            <span class="eyss-playlists-label"><?php _e('Playlists:', 'embed-youtube-shorts'); ?></span>
+                                            <span class="eyss-playlists-label"><?php esc_html_e('Playlists:', 'embed-youtube-shorts'); ?></span>
                                             <span class="eyss-playlists-list"><?php echo esc_html(implode(', ', $video['playlists'])); ?></span>
                                         </div>
                                     <?php endif; ?>
                                     <?php if ($show_views && isset($video['view_count'])): ?>
                                         <div class="eyss-video-stats">
-                                            <span class="eyss-views"><?php echo esc_html($this->format_number($video['view_count'])); ?> <?php _e('views', 'embed-youtube-shorts'); ?></span>
-                                            <span class="eyss-date"><?php echo esc_html(human_time_diff(strtotime($video['published_at']))); ?> <?php _e('ago', 'embed-youtube-shorts'); ?></span>
+                                            <span class="eyss-views"><?php echo esc_html($this->format_number($video['view_count'])); ?> <?php esc_html_e('views', 'embed-youtube-shorts'); ?></span>
+                                            <span class="eyss-date"><?php echo esc_html(human_time_diff(strtotime($video['published_at']))); ?> <?php esc_html_e('ago', 'embed-youtube-shorts'); ?></span>
                                         </div>
                                     <?php endif; ?>
                                 </div>
@@ -382,7 +387,9 @@ class EYSS_Shortcode
                                 class="eyss-video-link"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                aria-label="<?php printf(__('Watch %s on YouTube', 'embed-youtube-shorts'), esc_attr($video['title'])); ?>">
+                                aria-label="<?php
+                                            // translators: %s is the video title
+                                            printf(esc_attr__('Watch %s on YouTube', 'embed-youtube-shorts'), esc_attr($video['title'])); ?>">
                             </a>
                         </div>
                     <?php endforeach; ?>
@@ -391,7 +398,7 @@ class EYSS_Shortcode
 
             <?php if ($show_search): ?>
                 <div class="eyss-no-results" style="display: none;">
-                    <p><?php _e('No videos found matching your search.', 'embed-youtube-shorts'); ?></p>
+                    <p><?php esc_html_e('No videos found matching your search.', 'embed-youtube-shorts'); ?></p>
                 </div>
             <?php endif; ?>
 
@@ -404,7 +411,7 @@ class EYSS_Shortcode
                         data-offset="<?php echo count($videos); ?>"
                         data-count="<?php echo esc_attr($atts['count']); ?>"
                         data-target="<?php echo esc_attr($instance_id); ?>">
-                        <?php _e('Load More Videos', 'embed-youtube-shorts'); ?>
+                        <?php esc_html_e('Load More Videos', 'embed-youtube-shorts'); ?>
                     </button>
                 </div>
             <?php endif; ?>
@@ -511,6 +518,7 @@ class EYSS_Shortcode
             'post_status' => 'publish',
             'posts_per_page' => -1, // Get all posts
             'fields' => 'ids', // Only get IDs for performance
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Required for counting videos with filtering by channel/video ID, essential for pagination
             'meta_query' => array()
         );
 
@@ -589,8 +597,10 @@ class EYSS_Shortcode
         // Apply taxonomy queries
         if (!empty($tax_queries)) {
             if (count($tax_queries) > 1) {
+                // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Required for counting videos by playlist taxonomy, essential for pagination counts
                 $args['tax_query'] = array_merge(array('relation' => 'AND'), $tax_queries);
             } else {
+                // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Required for counting videos by playlist taxonomy, essential for pagination counts
                 $args['tax_query'] = $tax_queries;
             }
         }
@@ -613,16 +623,15 @@ class EYSS_Shortcode
     public function load_more_videos()
     {
         // Verify nonce
-        if (!wp_verify_nonce($_POST['nonce'], 'eyss_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'eyss_nonce')) {
             wp_die('Security check failed');
         }
 
-        $channel_id = sanitize_text_field($_POST['channel_id'] ?? '');
-        $playlist_id = sanitize_text_field($_POST['playlist_id'] ?? '');
-        $offset = intval($_POST['offset']);
-        $count = intval($_POST['count']);
+        $channel_id = sanitize_text_field(wp_unslash($_POST['channel_id'] ?? ''));
+        $playlist_id = sanitize_text_field(wp_unslash($_POST['playlist_id'] ?? ''));
+        $offset = isset($_POST['offset']) ? intval($_POST['offset']) : 0;
+        $count = isset($_POST['count']) ? intval($_POST['count']) : 10;
 
-        // Build query args for WordPress posts
         $args = array(
             'post_type' => 'youtube_short',
             'post_status' => 'publish',
@@ -630,6 +639,7 @@ class EYSS_Shortcode
             'offset' => $offset,
             'orderby' => 'date',
             'order' => 'DESC',
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Required for AJAX load more filtering by channel/video ID, essential for load more functionality
             'meta_query' => array()
         );
 
@@ -652,6 +662,7 @@ class EYSS_Shortcode
                 $playlist_field = 'name';
             }
 
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Required for AJAX load more filtering by playlist taxonomy, essential for load more functionality
             $args['tax_query'] = array(
                 array(
                     'taxonomy' => 'youtube_playlist',
@@ -741,7 +752,9 @@ class EYSS_Shortcode
                     class="eyss-video-link"
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label="<?php printf(__('Watch %s on YouTube', 'embed-youtube-shorts'), esc_attr($video['title'])); ?>">
+                    aria-label="<?php
+                                // translators: %s is the video title
+                                printf(esc_attr__('Watch %s on YouTube', 'embed-youtube-shorts'), esc_attr($video['title'])); ?>">
                 </a>
             </div>
         <?php
@@ -770,23 +783,22 @@ class EYSS_Shortcode
     public function search_videos()
     {
         // Verify nonce
-        if (!wp_verify_nonce($_POST['nonce'], 'eyss_nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'eyss_nonce')) {
             wp_die('Security check failed');
         }
 
-        $search_term = sanitize_text_field($_POST['search'] ?? '');
-        $channel_id = sanitize_text_field($_POST['channel_id'] ?? '');
-        $playlist_id = sanitize_text_field($_POST['playlist_id'] ?? '');
-        $playlists = sanitize_text_field($_POST['playlists'] ?? '');
-        $exclude_playlist = sanitize_text_field($_POST['exclude_playlist'] ?? '');
-        $layout = sanitize_text_field($_POST['layout'] ?? 'grid');
+        $search_term = sanitize_text_field(wp_unslash($_POST['search'] ?? ''));
+        $channel_id = sanitize_text_field(wp_unslash($_POST['channel_id'] ?? ''));
+        $playlist_id = sanitize_text_field(wp_unslash($_POST['playlist_id'] ?? ''));
+        $playlists = sanitize_text_field(wp_unslash($_POST['playlists'] ?? ''));
+        $exclude_playlist = sanitize_text_field(wp_unslash($_POST['exclude_playlist'] ?? ''));
+        $layout = sanitize_text_field(wp_unslash($_POST['layout'] ?? 'grid'));
         $count = intval($_POST['count'] ?? 20);
 
         if (empty($search_term)) {
             wp_send_json_error(__('Search term is required.', 'embed-youtube-shorts'));
         }
 
-        // Build search query
         $args = array(
             'post_type' => 'youtube_short',
             'post_status' => 'publish',
@@ -794,6 +806,7 @@ class EYSS_Shortcode
             's' => $search_term,
             'orderby' => 'relevance',
             'order' => 'DESC',
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Required for AJAX search filtering by channel/video ID, essential for search functionality
             'meta_query' => array()
         );
 
@@ -869,6 +882,7 @@ class EYSS_Shortcode
             if (count($tax_queries) > 1) {
                 $tax_queries['relation'] = 'AND';
             }
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Required for AJAX search filtering by playlist taxonomy, essential for search functionality
             $args['tax_query'] = $tax_queries;
         }
 
@@ -952,7 +966,9 @@ class EYSS_Shortcode
                     class="eyss-video-link"
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label="<?php printf(__('Watch %s on YouTube', 'embed-youtube-shorts'), esc_attr($video['title'])); ?>">
+                    aria-label="<?php
+                                // translators: %s is the video title
+                                printf(esc_attr__('Watch %s on YouTube', 'embed-youtube-shorts'), esc_attr($video['title'])); ?>">
                 </a>
             </div>
 <?php
