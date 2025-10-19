@@ -5,6 +5,37 @@ All notable changes to the Embed YouTube Shorts plugin will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1] - 2025-10-19
+
+### Fixed
+- **Video Import Progress Bar**: Fixed progress bar animation that wasn't displaying real-time import progress
+- **AJAX Handler Conflicts**: Resolved duplicate AJAX handlers that prevented proper background import with progress tracking
+- **Background Import Reliability**: Fixed import process to properly use background processing with visual progress updates
+
+### Enhanced
+- **Progress Polling System**: Improved import progress polling with better error handling and retry logic
+- **Cron Fallback**: Added fallback import method for when WordPress cron is disabled or fails to schedule
+- **UI Animations**: Progress bar now shows smooth CSS transitions during video import process
+- **Error Handling**: Enhanced error messages and timeout management for import monitoring
+
+## [2.3.0] - 2025-10-18
+
+### Enhanced
+- **WordPress.org Compliance**: Achieved 100% WordPress plugin directory readiness with comprehensive compliance updates
+- **Security Hardening**: Implemented comprehensive input validation, nonce verification, and data sanitization across all functions
+- **Internationalization**: Complete i18n support with proper translator comments and text domain consistency
+- **Code Quality**: Full WordPress coding standards compliance with proper escaping, validation, and formatting
+
+### Performance
+- **Database Optimization**: All database queries optimized with justified meta_query and tax_query usage documentation
+- **Resource Localization**: All external assets localized - included Splide.js v4.1.4 files directly in plugin package
+- **Query Efficiency**: Comprehensive documentation of all database operations with performance justifications
+
+### Production Ready
+- **Clean Codebase**: Removed all debug code, test files, and development dependencies for production deployment
+- **Documentation**: Enhanced code comments and inline documentation for maintainability
+- **Standards Compliance**: Eliminated all PHPCS violations and coding standard issues
+
 ## [2.2.4] - 2025-10-18
 
 ### Added
